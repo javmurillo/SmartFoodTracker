@@ -5,11 +5,13 @@
         .module('app.search')
         .controller('SearchController', SearchController);
 
-    SearchController.$inject = ['$http', 'AlertService'];
+    SearchController.$inject = ['$http', 'AlertService', 'LoginService'];
 
     /* @ngInject */
-    function SearchController($http, AlertService) {
+    function SearchController($http, AlertService, LoginService) {
         var vm = this;
+        var usuario = LoginService.currentLoggedUser();
+        console.log(usuario);
         vm.search = null;
         vm.searchCal = null;
 
@@ -75,10 +77,9 @@
                     var nombreProducto = objetoDietas[i].nombre;
                     var cantidad = objetoDietas[i].descripcion;
                     var arrayRecetas = objetoDietas[i].recetas;
+                    var arrayUsuarios = objetoDietas[i].usuarios;
                     var calories = 0;
 
-                    console.log(arrayRecetas);
-                    console.log(arrayRecetas[0].productos);
                     for (var j=0; j < arrayRecetas.length; j++) {
                         var arrayProductosDieta = arrayRecetas[j].productos;
                         for (var k=0; k < arrayProductosDieta.length; k++) {
@@ -86,11 +87,12 @@
                         }
 
                     }
-                    console.log(calories);
 
                     vm.dietasAPI.push({
                         title: nombreProducto,
                         content: cantidad,
+                        recetas: arrayRecetas,
+                        usuarios: arrayUsuarios,
                         calories: calories
                     });
                 }
@@ -103,11 +105,48 @@
         vm.filter = filter;
         vm.getDietas = getDietas;
         vm.getRecetas = getRecetas;
+        vm.followDiet = followDiet;
+        vm.isFollowing = isFollowing;
 
         vm.dietas = vm.dietasAPI;
         vm.recetas = vm.recetasAPI;
 
+
         ////////////////
+
+        function isFollowing(data) {
+            console.log(data);
+            console.log(usuario);
+            var i;
+            for (i = 0; i < data.usuarios.length; i++) {
+                console.log(data.usuarios[i].username === usuario.username);
+                if (data.usuarios[i].username === usuario.username) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function followDiet(data) {
+            console.log("Follow diet");
+            data.usuarios.push(usuario);
+            var data = {
+                nombre: data.title,
+                recetas: data.recetas,
+                usuarios: data.usuarios,
+                descripcion: data.content
+            };
+            $http.put("/api/dietas", data).then(
+                function (response) { //success
+                    console.log(data);
+
+                    AlertService.addAlert('success','¡Dieta ' + data.nombre + ' seguida con éxito!');
+                },
+                function (response) { //error
+                    AlertService.addAlert('danger','Error al actualizar la dieta ' + data.nombre);
+                }
+            );
+        }
 
         function getDietas() {
             return vm.dietas;

@@ -12,6 +12,8 @@
                 <div uib-accordion-group class="panel-default" heading="{{dieta.title}}" ng-repeat="dieta in vm.getDietas()">
                     {{dieta.content}}
                     <br/><b>Calorías:</b> {{dieta.calories}}
+                    <br/><br/><button type="button" class="btn btn-primary" ng-click="vm.followDiet(dieta)" ng-if="!vm.isFollowing(dieta)">¡Seguirr!</button>
+                    <button type="button" class="btn btn-success" ng-if="vm.isFollowing(dieta)">¡La he seguido!</button>
                 </div>
             </uib-accordion>
         </div>
